@@ -1,0 +1,40 @@
+# Render Blueprint — template-tiles
+#
+# Lets the service be re-created on any Render team (including the new
+# owner tea-d842ch1kh4rs73cr9l60) with one click: New > Blueprint >
+# point at this repo. No manual service configuration required.
+#
+# DATABASE_URL and API_TOKEN are intentionally `sync: false` — they are
+# entered once in the Render dashboard for the new service and are NOT
+# stored in git. The app fail-closes (refuses to boot) if API_TOKEN is
+# missing outside development, and throws if DATABASE_URL is missing, so
+# a misconfigured deploy fails loudly instead of running insecurely.
+services:
+  # Named distinctly from the old account's `template-tiles` service so
+  # this Blueprint can run on a SECOND Render account in parallel
+  # without an onrender.com subdomain / name collision. Matches the
+  # workspace's existing naming (sibling service: nexus-eendigo).
+  # URL will be https://nexus-template-tiles.onrender.com (or with a
+  # short Render suffix if that exact host is taken).
+  - type: web
+    name: nexus-template-tiles
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Postgres connection string. Reuse the SAME value as the old
+      # service (external Neon/Supabase, or the old Render Postgres's
+      # external connection string). Do not point at a fresh empty DB.
+      - key: DATABASE_URL
+        sync: false
+      # Shared bearer token gating all /api/* routes. Reuse the old
+      # value so existing logged-in clients keep working.
+      - key: API_TOKEN
+        sync: false

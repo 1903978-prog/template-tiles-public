@@ -1,0 +1,74 @@
+Build a small web app (single-page) called “Template Tiles”.
+
+Goal
+- Display a grid of square tiles (cards). Each tile contains editable text (a reusable template).
+- When the user clicks a tile (or a “Copy” action on the tile), the tile’s text is copied to the clipboard.
+- The user must be able to paste or type any text into each tile, save it, and later click to copy again.
+
+Tech
+- Use React + TypeScript (preferred) OR plain HTML/CSS/JS if simpler.
+- Must run in Replit with a simple “Run” experience.
+- Use browser clipboard API (navigator.clipboard.writeText).
+- Persist data in localStorage (no backend required).
+
+Core UX
+1) Grid
+- Responsive grid layout that shows many squares (e.g., 4–8 columns depending on screen width).
+- Each tile is a square with:
+  - Title (optional, short label)
+  - Body text (the template)
+  - Copy button (and also allow clicking the tile to copy)
+- Visual feedback after copy: toast/snackbar “Copied!” + brief highlight animation.
+
+2) Create / Edit templates
+- User can:
+  - Add a new tile
+  - Edit a tile’s title and text (multiline)
+  - Delete a tile
+- Editing should be easy:
+  - Either inline edit on the tile, or a modal/panel editor when clicking an “Edit” icon.
+- Provide a “Paste” helper in the editor:
+  - A textarea where user can paste the template.
+  - Save updates to localStorage immediately (or via Save button).
+
+3) Search / Organization
+- Add a search input that filters tiles by title or body text.
+- Optional but nice: allow drag-and-drop reorder (persist order), otherwise provide “Move left/right” or “Move up/down” controls.
+
+4) Defaults
+- On first load (empty localStorage), initialize with 6 sample tiles:
+  - “Follow-up email”
+  - “Meeting confirmation”
+  - “Thank you note”
+  - “Proposal intro”
+  - “Reminder / nudge”
+  - “Internal update”
+
+Functional requirements
+- Clicking tile copies EXACT tile text (body only, unless user toggles “include title”).
+- Must handle clipboard failures gracefully:
+  - If navigator.clipboard is unavailable, show fallback instructions (select & copy).
+- Must support multiline templates and preserve line breaks when copied.
+- Must be fast: no heavy libraries unless needed.
+
+UI details
+- Clean, professional look.
+- Tiles should be visually “square” (use CSS aspect-ratio: 1 / 1).
+- Provide a top toolbar: App title, Add button, Search field, and maybe “Export/Import”.
+- Add Export/Import:
+  - Export templates as JSON to download/copy.
+  - Import JSON to restore templates.
+
+Deliverables
+- Provide all source code in the Replit project.
+- Include short README with:
+  - How to run
+  - Where data is stored (localStorage)
+  - How to export/import
+  - Any limitations
+
+Acceptance tests (must pass)
+- Add a tile with multiline text → click tile → paste into a text editor → line breaks preserved.
+- Refresh page → tiles still there (localStorage).
+- Search filters tiles instantly.
+- Copy action shows “Copied!” feedback every time.

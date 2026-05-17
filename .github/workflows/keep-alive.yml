@@ -1,0 +1,22 @@
+name: Keep Alive Ping
+
+on:
+  schedule:
+    # Every 10 minutes to prevent Render free-tier spin-down
+    - cron: '*/10 * * * *'
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Ping app
+        # URL is parameterized so the move to a new Render team needs no
+        # code change: set repo variable KEEPALIVE_URL to the new
+        # service URL. Falls back to the original URL until then, so the
+        # ping never breaks during the migration.
+        env:
+          KEEPALIVE_URL: ${{ vars.KEEPALIVE_URL || 'https://template-tiles.onrender.com' }}
+        run: |
+          curl -sf -o /dev/null -w "HTTP %{http_code} in %{time_total}s\n" \
+            "$KEEPALIVE_URL/" || true
