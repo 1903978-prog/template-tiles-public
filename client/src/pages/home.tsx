@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { ToastAction } from "@/components/ui/toast";
 import {
   Plus,
@@ -327,6 +328,7 @@ export default function Home() {
     } catch { return []; }
   });
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -1194,6 +1196,74 @@ export default function Home() {
     );
   };
 
+  // Compact title-only row used on phones: tap copies the body to the
+  // clipboard so many templates can be scanned in a tight vertical list.
+  const renderTileRow = (tile: TemplateTile) => {
+    const isCopied = copiedId === tile.id;
+    const isFavorite = favoriteIds.has(tile.id);
+
+    return (
+      <div
+        key={tile.id}
+        data-testid={`card-tile-${tile.id}`}
+        className={`group relative flex items-center gap-2 border rounded-md bg-card px-3 py-2.5 cursor-pointer active:bg-muted/50 transition-colors ${
+          isCopied ? "ring-2 ring-primary/50" : ""
+        }`}
+        onClick={() => copyToClipboard(tile)}
+      >
+        {isCopied ? (
+          <Check className="w-4 h-4 text-primary shrink-0" />
+        ) : (
+          <Copy className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+        )}
+        <span
+          className="text-sm font-medium truncate flex-1 min-w-0"
+          data-testid={`text-tile-title-${tile.id}`}
+        >
+          {tile.title || "Untitled"}
+        </span>
+        <button
+          className={`p-1 rounded-sm shrink-0 ${isFavorite ? "text-yellow-400" : "text-muted-foreground/60"}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFavorite(tile.id);
+          }}
+          title={isFavorite ? "Unpin" : "Pin to top"}
+        >
+          <Star className={`w-4 h-4 ${isFavorite ? "fill-yellow-400" : ""}`} />
+        </button>
+        <button
+          data-testid={`button-edit-${tile.id}`}
+          className="p-1 rounded-sm text-muted-foreground/60 shrink-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            startEdit(tile);
+          }}
+          title="Edit"
+        >
+          <Pencil className="w-4 h-4" />
+        </button>
+        <button
+          data-testid={`button-delete-${tile.id}`}
+          className="p-1 rounded-sm text-muted-foreground/60 shrink-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            deleteTile(tile.id);
+          }}
+          title="Delete"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    );
+  };
+
+  const renderTile = isMobile ? renderTileRow : renderTileCard;
+  const tileContainerClass = isMobile ? "flex flex-col gap-2" : "grid gap-4";
+  const tileContainerStyle = isMobile
+    ? undefined
+    : { gridTemplateColumns: "repeat(auto-fill, minmax(min(220px, 100%), 1fr))" };
+
   if (!siteAuthenticated) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -1370,8 +1440,8 @@ export default function Home() {
                 Pinned
                 <span className="text-sm font-normal text-muted-foreground">({pinnedTiles.length})</span>
               </h2>
-              <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(220px, 100%), 1fr))" }}>
-                {pinnedTiles.map(renderTileCard)}
+              <div className={tileContainerClass} style={tileContainerStyle}>
+                {pinnedTiles.map(renderTile)}
               </div>
             </div>
           );
@@ -1559,11 +1629,11 @@ export default function Home() {
                   </h2>
                 </div>
                 <div
-                  className="grid gap-4"
-                  style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(220px, 100%), 1fr))" }}
+                  className={tileContainerClass}
+                  style={tileContainerStyle}
                   data-testid="grid-uncategorized"
                 >
-                  {uncategorizedTiles.map((tile) => {
+                  {isMobile ? uncategorizedTiles.map(renderTileRow) : uncategorizedTiles.map((tile) => {
                     const isCopied = copiedId === tile.id;
                     const isDragging = draggingTileId === tile.id;
                     const isPreviewed = previewTileId === tile.id;
@@ -1675,11 +1745,11 @@ export default function Home() {
                   Search results ({searchResultsGlobal.length})
                 </h2>
                 <div
-                  className="grid gap-4"
-                  style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(220px, 100%), 1fr))" }}
+                  className={tileContainerClass}
+                  style={tileContainerStyle}
                   data-testid="grid-tiles"
                 >
-                  {searchResultsGlobal.map(renderTileCard)}
+                  {searchResultsGlobal.map(renderTile)}
                 </div>
               </>
             )}
@@ -1718,11 +1788,11 @@ export default function Home() {
               </div>
             ) : (
               <div
-                className="grid gap-4 pb-20"
-                style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(220px, 100%), 1fr))" }}
+                className={`${tileContainerClass} pb-20`}
+                style={tileContainerStyle}
                 data-testid="grid-tiles"
               >
-                {filteredTiles.map(renderTileCard)}
+                {filteredTiles.map(renderTile)}
               </div>
             )}
           </>
