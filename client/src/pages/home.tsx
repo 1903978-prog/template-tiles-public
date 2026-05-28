@@ -80,7 +80,7 @@ const MIGRATED_KEY = "template-tiles-migrated-to-db";
 
 // ── API helpers ─────────────────────────────────────────
 async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
-  const token = sessionStorage.getItem(SITE_AUTH_KEY);
+  const token = localStorage.getItem(SITE_AUTH_KEY);
   const res = await fetch(url, {
     headers: {
       "Content-Type": "application/json",
@@ -89,8 +89,8 @@ async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
     ...opts,
   });
   if (res.status === 401) {
-    const hadToken = !!sessionStorage.getItem(SITE_AUTH_KEY);
-    sessionStorage.removeItem(SITE_AUTH_KEY);
+    const hadToken = !!localStorage.getItem(SITE_AUTH_KEY);
+    localStorage.removeItem(SITE_AUTH_KEY);
     if (hadToken) window.location.reload(); // only reload for expired tokens
     throw new Error("Unauthorized");
   }
@@ -152,7 +152,7 @@ async function apiDeleteFolder(id: string): Promise<string | null> {
 async function apiRestoreFromTrash(
   trashId: string,
 ): Promise<{ ok: true } | { ok: false; reason: string; status: number }> {
-  const token = sessionStorage.getItem(SITE_AUTH_KEY);
+  const token = localStorage.getItem(SITE_AUTH_KEY);
   const res = await fetch(`/api/trash/${encodeURIComponent(trashId)}/restore`, {
     method: "POST",
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -169,7 +169,7 @@ async function apiRestoreFromTrash(
 }
 
 async function apiPermanentlyDeleteTrash(trashId: string): Promise<void> {
-  const token = sessionStorage.getItem(SITE_AUTH_KEY);
+  const token = localStorage.getItem(SITE_AUTH_KEY);
   const res = await fetch(`/api/trash/${encodeURIComponent(trashId)}`, {
     method: "DELETE",
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -209,7 +209,7 @@ function generateId(): string {
 export default function Home() {
   const queryClient = useQueryClient();
   const [siteAuthenticated, setSiteAuthenticated] = useState(() => {
-    return !!sessionStorage.getItem(SITE_AUTH_KEY);
+    return !!localStorage.getItem(SITE_AUTH_KEY);
   });
   const [sitePasswordInput, setSitePasswordInput] = useState("");
   const [sitePasswordError, setSitePasswordError] = useState(false);
@@ -221,7 +221,7 @@ export default function Home() {
     try {
       const ok = await apiVerifyToken(sitePasswordInput);
       if (ok) {
-        sessionStorage.setItem(SITE_AUTH_KEY, sitePasswordInput);
+        localStorage.setItem(SITE_AUTH_KEY, sitePasswordInput);
         setSiteAuthenticated(true);
         setSitePasswordError(false);
       } else {
@@ -387,7 +387,7 @@ export default function Home() {
     let cancelled = false;
     const ping = async () => {
       try {
-        const token = sessionStorage.getItem(SITE_AUTH_KEY);
+        const token = localStorage.getItem(SITE_AUTH_KEY);
         const res = await fetch("/api/data", {
           method: "GET",
           headers: token ? { Authorization: `Bearer ${token}` } : {},
